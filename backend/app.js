@@ -6,13 +6,14 @@ const db = require("./config/db");
 
 app.use(cors());
 app.use(express.json());
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../public')));
 
-// Ruta básica
+
 app.get("/", (req, res) => {
     res.send("API funcionando 🔥");
 });
 
-// 🔥 PROBAR BASE DE DATOS
 app.get("/estudiantes", (req, res) => {
     db.query("SELECT * FROM estudiantes", (err, result) => {
         if (err) {
@@ -23,7 +24,7 @@ app.get("/estudiantes", (req, res) => {
     });
 });
 
-// 🔥 ESTUDIANTES POR CLASE
+
 app.get("/clase/:id/estudiantes", (req, res) => {
     const id_clase = req.params.id;
 
@@ -43,7 +44,6 @@ app.get("/clase/:id/estudiantes", (req, res) => {
     });
 });
 
-// 🔥 ASISTENCIA
 app.post("/asistencia", (req, res) => {
     const { id_estudiante, id_clase, fecha, estado, id_profesor } = req.body;
 
