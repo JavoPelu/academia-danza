@@ -67,7 +67,58 @@ app.post("/asistencia", (req, res) => {
     });
 });
 
-// 🚀 SIEMPRE AL FINAL
+
+const jwt = require("jsonwebtoken");
+app.post("/login", (req, res) => {
+    const { email, password } = req.body;
+
+    const sql = "SELECT * FROM usuarios WHERE email = ?";
+
+    db.query(sql, [email], (err, result) => {
+        if (err) return res.status(500).json({ mensaje: "Error servidor" });
+
+        if (result.length === 0) {
+            return res.status(401).json({ mensaje: "Usuario no existe" });
+        }
+
+        const user = result[0];
+
+        if (user.password !== password) {
+            return res.status(401).json({ mensaje: "Contraseña incorrecta" });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, rol: user.rol, id_profesor: user.id_profesor },
+            "secreto",
+            { expiresIn: "8h" }
+        );
+
+        res.json({
+            mensaje: "Login exitoso",
+            token,
+            rol: user.rol
+        });
+    });
+});
+
+
+app.get("/asistencia", (req, res) => {
+    const sql = `
+        SELECT e.nombre, c.nombre AS clase, a.fecha, a.estado
+        FROM asistencia a
+        JOIN estudiantes e ON e.id = a.id_estudiante
+        JOIN clases c ON c.id = a.id_clase
+    `;
+
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.log(err);
+            return res.send("Error");
+        }
+
+        res.json(result);
+    });
+});
 app.listen(3000, () => {
     console.log("Servidor en puerto 3000");
 });
