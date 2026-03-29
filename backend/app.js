@@ -71,6 +71,7 @@ app.post("/asistencia", (req, res) => {
 const jwt = require("jsonwebtoken");
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
+    console.log("Intentando entrar con:", email);
 
     const sql = "SELECT * FROM usuarios WHERE email = ?";
 
