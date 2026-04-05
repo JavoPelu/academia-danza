@@ -1,13 +1,18 @@
 const jwt = require("jsonwebtoken");
 
 const verificarToken = (req, res, next) => {
-    const token = req.headers["authorization"];
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : authHeader;
 
     if (!token) {
         return res.status(403).json({ mensaje: "Sin token" });
     }
 
-    jwt.verify(token, "secreto", (err, decoded) => {
+    const secreto = process.env.JWT_SECRET || "secreto";
+
+    jwt.verify(token, secreto, (err, decoded) => {
         if (err) {
             return res.status(401).json({ mensaje: "Token inválido" });
         }
