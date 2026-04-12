@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudiantes de Clase</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="page dashboard-page">
+        <header class="topbar">
+            <div>
+                <h1 id="classTitle">Gestión de estudiantes</h1>
+                <p class="subtitle" id="subtitle">Clase</p>
+            </div>
+            <button id="backBtn" class="secondary-button">Volver al dashboard</button>
+        </header>
+
+        <main class="card dashboard-card">
+            <div id="mensaje" class="mensaje toast"></div>
+            <ul id="studentsList" class="student-list"></ul>
+        </main>
+    </div>
+
+    <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const classId = urlParams.get('id');
+    const className = decodeURIComponent(urlParams.get('nombre') || '');
+    
+    document.getElementById("subtitle").textContent = `Clase: ${className}`;
+
+    function mostrarMensaje(texto, tipo = "success") {
+        const mensajeDiv = document.getElementById("mensaje");
+        mensajeDiv.textContent = texto;
+        mensajeDiv.className = `mensaje toast ${tipo === "error" ? "error" : "success"}`;
+        mensajeDiv.style.opacity = "1";
+        setTimeout(() => {
+            mensajeDiv.style.opacity = "0";
+        }, 3500);
+    }
+
+    async function cargarEstudiantesClase() {
+        if (!classId) {
+            document.getElementById("studentsList").innerHTML = "<p>Error: No se especificó clase.</p>";
+            return;
+        }
+
+        try {
+            const res = await fetch(`http://localhost:3002/clase/${classId}/estudiantes`);
+            const data = await res.json();
+
+            const list = document.getElementById("studentsList");
+            list.innerHTML = "";
+
+            if (!data.length) {
+                list.innerHTML = "<p class='empty-state'>No hay estudiantes inscritos en esta clase.</p>";
+                return;
+            }
+
+            data.forEach(est => {
+                const li = document.createElement("li");
+                li.className = "student-item";
+                li.innerHTML = `
+                    <span>${est.nombre}</span>
+                    <div class="action-buttons">
+                        <button onclick="cambiarEstudiante(${est.id}, '${est.nombre}')" class="secondary-button" style="font-size: 0.9rem; padding: 8px 12px;">Cambiar</button>
+                        <button onclick="retirarEstudiante(${est.id}, '${est.nombre}')" class="secondary-button" style="font-size: 0.9rem; padding: 8px 12px; background: #ef4444; color: white;">Retirar</button>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        } catch (err) {
+            document.getElementById("studentsList").innerHTML = "<p class='empty-state'>Error al cargar estudiantes.</p>";
+            console.error(err);
+        }
+    }
+
+    async function retirarEstudiante(id_estudiante, nombre) {
+        if (!confirm(`¿Estás seguro de que quieres retirar a ${nombre} de la clase?`)) {
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+
+        try {
+            const res = await fetch(`http://localhost:3002/inscripciones/${id_estudiante}/${classId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                mostrarMensaje("Estudiante retirado exitosamente");
+                cargarEstudiantesClase();
+            } else {
+                mostrarMensaje(data.mensaje || "Error al retirar", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+
+    async function cambiarEstudiante(id_estudiante, nombre) {
+        // Cargar clases disponibles
+        try {
+            const res = await fetch("http://localhost:3002/clases");
+            const clases = await res.json();
+            
+            const nuevaClase = prompt(`${nombre} se cambiará a:\n\nIds de clases disponibles (ingresa el ID):\n${clases.filter(c => c.id != classId).map(c => `${c.id}: ${c.nombre}`).join('\n')}`, '');
+            
+            if (!nuevaClase) return;
+
+            const token = localStorage.getItem("token");
+            const cambiarRes = await fetch("http://localhost:3002/inscripciones/cambiar", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    id_estudiante,
+                    id_clase_anterior: parseInt(classId),
+                    id_clase_nueva: parseInt(nuevaClase)
+                })
+            });
+
+            const cambiarData = await cambiarRes.json();
+            if (cambiarRes.ok) {
+                mostrarMensaje("Estudiante cambiado de clase exitosamente");
+                cargarEstudiantesClase();
+            } else {
+                mostrarMensaje(cambiarData.mensaje || "Error al cambiar", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+
+    document.getElementById("backBtn").onclick = () => {
+        window.location.href = "dashboard.html";
+    };
+
+    cargarEstudiantesClase();
+    </script>
+</body>
+</html>

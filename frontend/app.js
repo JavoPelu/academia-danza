@@ -22,7 +22,7 @@ async function login(event) {
         mensajeDiv.textContent = "Cargando...";
         mensajeDiv.className = "mensaje";
 
-        const res = await fetch("http://localhost:3000/login", {
+        const res = await fetch("http://localhost:3002/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

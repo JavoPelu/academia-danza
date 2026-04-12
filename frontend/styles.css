@@ -15,8 +15,9 @@ body {
 .page {
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     padding: 24px;
 }
 
@@ -115,9 +116,97 @@ button.secondary-button {
     padding: 12px 18px;
 }
 
+button.danger-button {
+    background: #ef4444;
+    color: white;
+}
+
 button.secondary-button:hover,
+button.danger-button:hover,
 .icon-button:hover {
     transform: translateY(-1px);
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 50;
+}
+
+.modal.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    width: min(520px, calc(100% - 32px));
+    background: white;
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 36px 72px rgba(15, 23, 42, 0.18);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.modal-subtitle {
+    margin: 6px 0 0;
+    color: #6b7280;
+    font-size: 0.95rem;
+}
+
+.modal-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.modal-form .form-group input,
+.modal-form .form-group select,
+.modal-form .form-group textarea {
+    width: 100%;
+}
+
+.modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.modal-actions .secondary-button {
+    width: auto;
+    min-width: 120px;
+}
+
+.modal-actions .primary-button {
+    min-width: 140px;
+}
+
+@media (max-width: 720px) {
+    .modal-form .form-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 .mensaje {
@@ -148,16 +237,20 @@ button.secondary-button:hover,
 
 .dashboard-page {
     flex-direction: column;
-    padding: 32px;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    align-items: center;
 }
 
 .topbar {
-    width: min(100%, 960px);
+    width: min(100%, 1000px);
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 16px;
     margin-bottom: 24px;
+    padding: 0 24px;
 }
 
 .topbar h1 {
@@ -171,8 +264,57 @@ button.secondary-button:hover,
 }
 
 .dashboard-card {
-    max-width: 960px;
+    width: min(100%, 1000px);
+    max-width: 100%;
     padding: 24px;
+    margin-bottom: 32px;
+}
+
+.tabs-container {
+    width: min(100%, 1000px);
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 0 24px;
+}
+
+.tab-button {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #64748b;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    color: #6366f1;
+}
+
+.tab-button.active {
+    color: #6366f1;
+    border-bottom-color: #6366f1;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .student-list {
@@ -222,6 +364,114 @@ button.secondary-button:hover,
 
 .icon-button:focus {
     outline: none;
+}
+
+.classes-panel,
+.assignment-panel {
+    margin-bottom: 32px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.classes-container {
+    min-height: 120px;
+}
+
+.classes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.class-card {
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.class-card h3 {
+    margin: 0 0 8px 0;
+    color: #1f2937;
+}
+
+.class-card p {
+    margin: 0 0 16px 0;
+    color: #64748b;
+}
+
+.student-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.student-form input {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    font-size: 1rem;
+}
+
+.student-form input:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+}
+
+.student-form button {
+    grid-column: 1 / -1;
+}
+
+.divider {
+    margin: 24px 0;
+    border: none;
+    border-top: 1px solid #e2e8f0;
+}
+
+.assignment-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.assignment-form select {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    font-size: 1rem;
+}
+
+.assignment-form select:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+}
+
+@media (max-width: 720px) {
+    .assignment-form {
+        grid-template-columns: 1fr;
+    }
+
+    .student-form {
+        grid-template-columns: 1fr;
+    }
+
+    .classes-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .attendance-panel {
@@ -288,13 +538,26 @@ button.secondary-button:hover,
     .page,
     .topbar,
     .dashboard-card,
-    .login-card {
+    .login-card,
+    .tabs-container {
         width: 100%;
     }
 
     .topbar {
         flex-direction: column;
         align-items: flex-start;
+        padding: 0 16px;
+    }
+
+    .tabs-container {
+        padding: 0 16px;
+        overflow-x: auto;
+        flex-wrap: wrap;
+    }
+
+    .tab-button {
+        padding: 10px 16px;
+        font-size: 0.9rem;
     }
 
     .student-item {
@@ -304,5 +567,123 @@ button.secondary-button:hover,
 
     .action-buttons {
         grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Estilos para crear clases y horarios */
+.form-section {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.form-section h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #1f2937;
+    font-size: 1.2rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 12px 16px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 12px;
+    font-size: 1rem;
+    background: white;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.info-text {
+    color: #6b7280;
+    font-style: italic;
+    margin-bottom: 16px;
+}
+
+.schedules-list h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #1f2937;
+    font-size: 1rem;
+}
+
+.schedule-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+}
+
+.schedule-item span {
+    font-weight: 500;
+    color: #374151;
+}
+
+.delete-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+    background: #dc2626;
+}
+
+@media (max-width: 720px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-section {
+        padding: 16px;
     }
 }

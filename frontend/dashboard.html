@@ -10,31 +10,529 @@
     <div class="page dashboard-page">
         <header class="topbar">
             <div>
-                <h1>Registro de asistencia</h1>
-                <p class="subtitle">Clase 1 - Control de estudiantes</p>
+                <h1>Academia Danza</h1>
+                <p class="subtitle">Sistema de gestión de asistencia</p>
             </div>
             <button id="logoutBtn" class="secondary-button">Cerrar sesión</button>
         </header>
 
+        <div class="tabs-container">
+            <button class="tab-button active" data-tab="clases">Clases</button>
+            <button class="tab-button" data-tab="crear">Crear Clase</button>
+            <button class="tab-button" data-tab="asignar">Asignar Estudiantes</button>
+            <button class="tab-button" data-tab="asistencia">Asistencias</button>
+        </div>
+
         <main class="card dashboard-card">
             <div id="mensaje" class="mensaje toast"></div>
-            <ul id="lista" class="student-list"></ul>
 
-            <section class="attendance-panel">
-                <div class="attendance-header">
-                    <h2>Asistencias registradas</h2>
-                    <button id="refreshAttendance" class="secondary-button">Actualizar</button>
+            <!-- TAB: Clases -->
+            <section id="clases-tab" class="tab-content active">
+                <div class="panel-header">
+                    <h2>Clases disponibles</h2>
+                    <button id="refreshClasses" class="secondary-button">Actualizar</button>
                 </div>
-                <div id="attendanceContainer" class="attendance-container">Cargando asistencias...</div>
+                <div id="classesContainer" class="classes-container">Cargando clases...</div>
+            </section>
+
+            <!-- TAB: Crear Clase -->
+            <section id="crear-tab" class="tab-content">
+                <div class="panel-header">
+                    <h2>Crear nueva clase</h2>
+                </div>
+                
+                <form id="createClassForm" class="form-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="className">Nombre de la clase *</label>
+                            <input type="text" id="className" placeholder="ej: Ballet Básico" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="classLevel">Nivel *</label>
+                            <select id="classLevel" required>
+                                <option value="">Seleccionar nivel</option>
+                                <option value="Principiante">Principiante</option>
+                                <option value="Intermedio">Intermedio</option>
+                                <option value="Avanzado">Avanzado</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="classDescription">Descripción</label>
+                            <textarea id="classDescription" placeholder="Descripción opcional de la clase" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="classCapacity">Capacidad máxima</label>
+                            <input type="number" id="classCapacity" placeholder="20" min="1" value="20">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="primary-button">Crear Clase</button>
+                </form>
+
+                <div class="form-section">
+                    <h3>Asignar horarios a la clase</h3>
+                    <p class="info-text">Primero crea la clase, luego podrás asignarle múltiples horarios.</p>
+                    
+                    <div id="scheduleSection" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="scheduleClass">Clase</label>
+                                <select id="scheduleClass">
+                                    <option value="">Seleccionar clase</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="scheduleProfessor">Profesor</label>
+                                <select id="scheduleProfessor">
+                                    <option value="">Seleccionar profesor</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="scheduleDay">Día de la semana</label>
+                                <select id="scheduleDay">
+                                    <option value="">Seleccionar día</option>
+                                    <option value="Lunes">Lunes</option>
+                                    <option value="Martes">Martes</option>
+                                    <option value="Miércoles">Miércoles</option>
+                                    <option value="Jueves">Jueves</option>
+                                    <option value="Viernes">Viernes</option>
+                                    <option value="Sábado">Sábado</option>
+                                    <option value="Domingo">Domingo</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="scheduleTime">Hora</label>
+                                <input type="time" id="scheduleTime">
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="addScheduleBtn" class="primary-button">Agregar Horario</button>
+                        
+                        <div id="schedulesList" class="schedules-list" style="margin-top: 20px;">
+                            <h4>Horarios asignados</h4>
+                            <div id="schedulesContainer">No hay horarios asignados</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: Asignar Estudiantes -->
+            <section id="asignar-tab" class="tab-content">
+                <div class="panel-header">
+                    <h2>Crear nuevo estudiante</h2>
+                </div>
+                <form id="createStudentForm" class="student-form">
+                    <input type="text" id="studentName" placeholder="Nombre completo" required>
+                    <input type="email" id="studentEmail" placeholder="Correo electrónico" required>
+                    <input type="tel" id="studentPhone" placeholder="Teléfono">
+                    <input type="text" id="studentGuardian" placeholder="Nombre del acudiente" required>
+                    <input type="tel" id="studentGuardianPhone" placeholder="Teléfono del acudiente" required>
+                    <button type="submit" class="primary-button">Crear Estudiante</button>
+                </form>
+
+                <hr class="divider">
+
+                <div class="panel-header">
+                    <h2>Asignar estudiante a clase</h2>
+                </div>
+                <form id="assignmentForm" class="assignment-form">
+                    <select id="studentSelect" required>
+                        <option value="">Seleccionar estudiante</option>
+                    </select>
+                    <select id="classSelect" required>
+                        <option value="">Seleccionar clase</option>
+                    </select>
+                    <button type="submit" class="primary-button">Asignar</button>
+                </form>
+            </section>
+
+            <!-- TAB: Asistencia -->
+            <section id="asistencia-tab" class="tab-content">
+                <ul id="lista" class="student-list"></ul>
+
+                <section class="attendance-panel">
+                    <div class="attendance-header">
+                        <h2>Asistencias registradas</h2>
+                        <button id="refreshAttendance" class="secondary-button">Actualizar</button>
+                    </div>
+                    <div id="attendanceContainer" class="attendance-container">Cargando asistencias...</div>
+                </section>
             </section>
         </main>
+    </div>
+
+    <div id="editClassModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3>Editar clase</h3>
+                    <p class="modal-subtitle">Modifica nombre, nivel, descripción y capacidad</p>
+                </div>
+                <button id="closeEditModal" class="icon-button">×</button>
+            </div>
+            <form id="editClassForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editClassName">Nombre de la clase</label>
+                        <input type="text" id="editClassName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editClassLevel">Nivel</label>
+                        <select id="editClassLevel" required>
+                            <option value="">Seleccionar nivel</option>
+                            <option value="Principiante">Principiante</option>
+                            <option value="Intermedio">Intermedio</option>
+                            <option value="Avanzado">Avanzado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editClassDescription">Descripción</label>
+                        <textarea id="editClassDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editClassCapacity">Capacidad máxima</label>
+                        <input type="number" id="editClassCapacity" min="1" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="manageStudentsBtn" class="secondary-button">Gestionar estudiantes</button>
+                    <button type="button" id="cancelEditClass" class="secondary-button">Cancelar</button>
+                    <button type="submit" class="primary-button">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
     const mensajeDiv = document.getElementById("mensaje");
 
+    async function cargarClases() {
+        const container = document.getElementById("classesContainer");
+        try {
+            const res = await fetch("http://localhost:3002/clases");
+            const data = await res.json();
+
+            if (!res.ok) {
+                container.innerHTML = `<p class="empty-state">No se pudieron cargar las clases.</p>`;
+                return;
+            }
+
+            if (!data.length) {
+                container.innerHTML = `<p class="empty-state">No hay clases registradas.</p>`;
+                return;
+            }
+
+            const cards = data.map(clase => {
+                const capacidad = clase.capacidad_maxima || 20;
+                const inscritos = clase.estudiantes_inscritos || 0;
+                const disponibles = capacidad - inscritos;
+                const porcentaje = Math.round((inscritos / capacidad) * 100);
+                
+                return `
+                    <div class="class-card">
+                        <h3>${clase.nombre}</h3>
+                        <p><strong>Profesor:</strong> ${clase.profesor_nombre || 'Sin asignar'}</p>
+                        <p><strong>Horario:</strong> ${clase.horarios || 'No definido'}</p>
+                        <div class="capacity-info">
+                            <p><strong>Capacidad:</strong> ${inscritos}/${capacidad}</p>
+                            <div class="capacity-bar">
+                                <div class="capacity-fill" style="width: ${porcentaje}%"></div>
+                            </div>
+                            <small>${disponibles} lugar${disponibles !== 1 ? 'es' : ''} disponible${disponibles !== 1 ? 's' : ''}</small>
+                        </div>
+                        <div class="card-actions">
+                            <button onclick="editarClase(${clase.id})" class="secondary-button">Editar</button>
+                            <button onclick="eliminarClase(${clase.id})" class="secondary-button danger-button">Eliminar</button>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+
+            container.innerHTML = `<div class="classes-grid">${cards}</div>`;
+        } catch (err) {
+            container.innerHTML = `<p class="empty-state">Error de conexión.</p>`;
+            console.error(err);
+        }
+    }
+
+    async function editarCapacidad(id_clase, capacidad_actual) {
+        const nueva_capacidad = prompt(`Capacidad actual: ${capacidad_actual}\n¿Cuál es la nueva capacidad máxima?`, capacidad_actual);
+        
+        if (!nueva_capacidad || isNaN(nueva_capacidad) || nueva_capacidad < 1) {
+            mostrarMensaje("Capacidad inválida", "error");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+
+        try {
+            const res = await fetch(`http://localhost:3002/clases/${id_clase}/capacidad`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({ capacidad_maxima: parseInt(nueva_capacidad) })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                mostrarMensaje("Capacidad actualizada");
+                cargarClases();
+            } else {
+                mostrarMensaje(data.mensaje || "Error al actualizar", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+
+    let editClassId = null;
+    const editClassModal = document.getElementById("editClassModal");
+    const editClassForm = document.getElementById("editClassForm");
+    const editClassName = document.getElementById("editClassName");
+    const editClassLevel = document.getElementById("editClassLevel");
+    const editClassDescription = document.getElementById("editClassDescription");
+    const editClassCapacity = document.getElementById("editClassCapacity");
+    const manageStudentsBtn = document.getElementById("manageStudentsBtn");
+    const cancelEditClass = document.getElementById("cancelEditClass");
+    const closeEditModal = document.getElementById("closeEditModal");
+
+    function abrirModalEditarClase() {
+        editClassModal.classList.add("visible");
+    }
+
+    function cerrarModalEditarClase() {
+        editClassModal.classList.remove("visible");
+        editClassForm.reset();
+        editClassId = null;
+    }
+
+    async function editarClase(id_clase) {
+        try {
+            const res = await fetch(`http://localhost:3002/clases/${id_clase}`);
+            const data = await res.json();
+
+            if (!res.ok) {
+                mostrarMensaje(data.mensaje || "No se pudo cargar la clase", "error");
+                return;
+            }
+
+            editClassId = id_clase;
+            editClassName.value = data.nombre || "";
+            editClassLevel.value = data.nivel || "";
+            editClassDescription.value = data.descripcion || "";
+            editClassCapacity.value = data.capacidad_maxima || 20;
+
+            manageStudentsBtn.onclick = () => gestionarEstudiantes(id_clase, data.nombre);
+            abrirModalEditarClase();
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+
+    closeEditModal.onclick = cerrarModalEditarClase;
+    cancelEditClass.onclick = cerrarModalEditarClase;
+
+    editClassForm.onsubmit = async event => {
+        event.preventDefault();
+
+        if (!editClassId) {
+            mostrarMensaje("No se pudo determinar la clase a editar", "error");
+            return;
+        }
+
+        const nombre = editClassName.value.trim();
+        const nivel = editClassLevel.value;
+        const descripcion = editClassDescription.value.trim() || null;
+        const capacidad_maxima = parseInt(editClassCapacity.value, 10);
+
+        if (!nombre || !nivel || isNaN(capacidad_maxima) || capacidad_maxima < 1) {
+            mostrarMensaje("Por favor completa todos los datos correctamente", "error");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+
+        try {
+            const res = await fetch(`http://localhost:3002/clases/${editClassId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({ nombre, descripcion, nivel, capacidad_maxima })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                mostrarMensaje(data.mensaje || "Clase actualizada correctamente");
+                cerrarModalEditarClase();
+                cargarClases();
+                cargarClasesParaHorarios();
+            } else {
+                mostrarMensaje(data.mensaje || "Error al actualizar clase", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+    async function eliminarClase(id_clase) {
+        if (!confirm("¿Estás seguro de que deseas eliminar esta clase y todos sus horarios?")) {
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch(`http://localhost:3002/clases/${id_clase}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                mostrarMensaje(data.mensaje || "Clase eliminada correctamente");
+                cargarClases();
+                cargarClasesParaHorarios();
+            } else {
+                mostrarMensaje(data.mensaje || "Error al eliminar clase", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+
+    async function gestionarEstudiantes(id_clase, nombre_clase) {
+        window.location.href = `clase.html?id=${id_clase}&nombre=${encodeURIComponent(nombre_clase)}`;
+    }
+
+    async function cargarEstudiantesParaSelect() {
+        try {
+            const res = await fetch("http://localhost:3002/estudiantes");
+            const data = await res.json();
+            const select = document.getElementById("studentSelect");
+            select.innerHTML = '<option value="">Seleccionar estudiante</option>';
+            data.forEach(est => {
+                select.innerHTML += `<option value="${est.id}">${est.nombre}</option>`;
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function cargarClasesParaSelect() {
+        try {
+            const res = await fetch("http://localhost:3002/clases");
+            const data = await res.json();
+            const select = document.getElementById("classSelect");
+            select.innerHTML = '<option value="">Seleccionar clase</option>';
+            data.forEach(clase => {
+                select.innerHTML += `<option value="${clase.id}">${clase.nombre}</option>`;
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function crearEstudiante(event) {
+        event.preventDefault();
+        
+        const nombre = document.getElementById("studentName").value.trim();
+        const email = document.getElementById("studentEmail").value.trim();
+        const telefono = document.getElementById("studentPhone").value.trim();
+        const acudiente_nombre = document.getElementById("studentGuardian").value.trim();
+        const acudiente_telefono = document.getElementById("studentGuardianPhone").value.trim();
+
+        if (!nombre || !email || !acudiente_nombre || !acudiente_telefono) {
+            mostrarMensaje("Todos los campos son requeridos", "error");
+            return;
+        }
+
+        try {
+            const res = await fetch("http://localhost:3002/estudiantes", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    nombre,
+                    email,
+                    telefono: telefono || null,
+                    acudiente_nombre,
+                    acudiente_telefono
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                mostrarMensaje("Estudiante creado exitosamente");
+                document.getElementById("createStudentForm").reset();
+                cargarEstudiantesParaSelect();
+            } else {
+                mostrarMensaje(data.mensaje || "Error al crear estudiante", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+
+    async function asignarEstudiante(event) {
+        event.preventDefault();
+        const id_estudiante = document.getElementById("studentSelect").value;
+        const id_clase = document.getElementById("classSelect").value;
+
+        if (!id_estudiante || !id_clase) {
+            mostrarMensaje("Selecciona estudiante y clase", "error");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+
+        try {
+            const res = await fetch("http://localhost:3002/inscripciones", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({ id_estudiante: parseInt(id_estudiante), id_clase: parseInt(id_clase) })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                mostrarMensaje(data.mensaje || "Asignación exitosa");
+                cargarEstudiantes();
+                cargarClases();
+            } else {
+                mostrarMensaje(data.mensaje || "Error en asignación", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+
+    function verEstudiantesClase(id_clase) {
+        window.location.href = `clase.html?id=${id_clase}`;
+    }
+
     async function cargarEstudiantes() {
-        const res = await fetch("http://localhost:3000/clase/1/estudiantes");
+        const res = await fetch("http://localhost:3002/clase/1/estudiantes");
         const data = await res.json();
 
         const lista = document.getElementById("lista");
@@ -88,7 +586,7 @@
     async function cargarAsistencias() {
         const container = document.getElementById("attendanceContainer");
         try {
-            const res = await fetch("http://localhost:3000/asistencia");
+            const res = await fetch("http://localhost:3002/asistencia");
             const data = await res.json();
 
             if (!res.ok) {
@@ -136,7 +634,7 @@
         const hoy = new Date().toISOString().split('T')[0];
 
         try {
-            const res = await fetch("http://localhost:3000/asistencia", {
+            const res = await fetch("http://localhost:3002/asistencia", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -171,9 +669,234 @@
     };
 
     document.getElementById("refreshAttendance").onclick = () => cargarAsistencias();
+    document.getElementById("refreshClasses").onclick = () => cargarClases();
+    document.getElementById("createStudentForm").onsubmit = crearEstudiante;
+    document.getElementById("assignmentForm").onsubmit = asignarEstudiante;
+
+    // Funciones para crear clases y horarios
+    document.getElementById("createClassForm").onsubmit = crearClase;
+    document.getElementById("addScheduleBtn").onclick = agregarHorario;
+    document.getElementById("scheduleClass").onchange = cargarHorariosClase;
+
+    // Sistema de pestañas
+    const tabButtons = document.querySelectorAll(".tab-button");
+    const tabContents = document.querySelectorAll(".tab-content");
+
+    tabButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            const tabName = button.getAttribute("data-tab");
+
+            // Ocultar todas las pestañas
+            tabContents.forEach(content => {
+                content.classList.remove("active");
+            });
+
+            // Remover clase active de todos los botones
+            tabButtons.forEach(btn => {
+                btn.classList.remove("active");
+            });
+
+            // Mostrar la pestaña seleccionada
+            document.getElementById(tabName + "-tab").classList.add("active");
+            button.classList.add("active");
+
+            // Si es la pestaña de crear, cargar profesores
+            if (tabName === "crear") {
+                cargarProfesores();
+                cargarClasesParaHorarios();
+            }
+        });
+    });
+
+    async function crearClase(event) {
+        event.preventDefault();
+        
+        const nombre = document.getElementById("className").value.trim();
+        const nivel = document.getElementById("classLevel").value;
+        const descripcion = document.getElementById("classDescription").value.trim();
+        const capacidad_maxima = parseInt(document.getElementById("classCapacity").value) || 20;
+        
+        const token = localStorage.getItem("token");
+        
+        try {
+            const res = await fetch("http://localhost:3002/clases", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    nombre,
+                    nivel,
+                    descripcion,
+                    capacidad_maxima
+                })
+            });
+            
+            const data = await res.json();
+            if (res.ok) {
+                mostrarMensaje("Clase creada exitosamente");
+                document.getElementById("createClassForm").reset();
+                cargarClasesParaHorarios();
+                cargarClases(); // Actualizar la lista de clases
+                document.getElementById("scheduleSection").style.display = "block";
+            } else {
+                mostrarMensaje(data.mensaje || "Error al crear clase", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+
+    async function cargarProfesores() {
+        try {
+            const res = await fetch("http://localhost:3002/profesores");
+            const profesores = await res.json();
+            
+            const select = document.getElementById("scheduleProfessor");
+            select.innerHTML = '<option value="">Seleccionar profesor</option>';
+            
+            profesores.forEach(prof => {
+                const option = document.createElement("option");
+                option.value = prof.id;
+                option.textContent = prof.nombre;
+                select.appendChild(option);
+            });
+        } catch (err) {
+            console.error("Error cargando profesores:", err);
+        }
+    }
+
+    async function cargarClasesParaHorarios() {
+        try {
+            const res = await fetch("http://localhost:3002/clases");
+            const clases = await res.json();
+            
+            const select = document.getElementById("scheduleClass");
+            select.innerHTML = '<option value="">Seleccionar clase</option>';
+            
+            clases.forEach(clase => {
+                const option = document.createElement("option");
+                option.value = clase.id;
+                option.textContent = clase.nombre;
+                select.appendChild(option);
+            });
+        } catch (err) {
+            console.error("Error cargando clases:", err);
+        }
+    }
+
+    async function agregarHorario() {
+        const id_clase = document.getElementById("scheduleClass").value;
+        const id_profesor = document.getElementById("scheduleProfessor").value;
+        const dia_semana = document.getElementById("scheduleDay").value;
+        const hora = document.getElementById("scheduleTime").value;
+        
+        if (!id_clase || !id_profesor || !dia_semana || !hora) {
+            mostrarMensaje("Todos los campos son requeridos", "error");
+            return;
+        }
+        
+        const token = localStorage.getItem("token");
+        
+        try {
+            const res = await fetch("http://localhost:3002/horarios", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    id_clase: parseInt(id_clase),
+                    id_profesor: parseInt(id_profesor),
+                    dia_semana,
+                    hora
+                })
+            });
+            
+            const data = await res.json();
+            if (res.ok) {
+                mostrarMensaje("Horario agregado exitosamente");
+                document.getElementById("scheduleDay").value = "";
+                document.getElementById("scheduleTime").value = "";
+                cargarHorariosClase();
+                cargarClases(); // Actualizar la lista de clases con nuevos horarios
+            } else {
+                mostrarMensaje(data.mensaje || "Error al agregar horario", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+
+    async function cargarHorariosClase() {
+        const id_clase = document.getElementById("scheduleClass").value;
+        const container = document.getElementById("schedulesContainer");
+        
+        if (!id_clase) {
+            container.innerHTML = "No hay horarios asignados";
+            return;
+        }
+        
+        try {
+            const res = await fetch(`http://localhost:3002/horarios/${id_clase}`);
+            const horarios = await res.json();
+            
+            if (!horarios.length) {
+                container.innerHTML = "No hay horarios asignados a esta clase";
+                return;
+            }
+            
+            const items = horarios.map(h => `
+                <div class="schedule-item">
+                    <span>${h.dia_semana} ${h.hora} - ${h.profesor_nombre}</span>
+                    <button onclick="eliminarHorario(${h.id})" class="delete-btn">×</button>
+                </div>
+            `).join("");
+            
+            container.innerHTML = items;
+        } catch (err) {
+            container.innerHTML = "Error al cargar horarios";
+            console.error(err);
+        }
+    }
+
+    async function eliminarHorario(id_horario) {
+        if (!confirm("¿Estás seguro de que quieres eliminar este horario?")) {
+            return;
+        }
+        
+        const token = localStorage.getItem("token");
+        
+        try {
+            const res = await fetch(`http://localhost:3002/horarios/${id_horario}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+            
+            const data = await res.json();
+            if (res.ok) {
+                mostrarMensaje("Horario eliminado exitosamente");
+                cargarHorariosClase();
+                cargarClases(); // Actualizar la lista de clases
+            } else {
+                mostrarMensaje(data.mensaje || "Error al eliminar horario", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
 
     cargarEstudiantes();
     cargarAsistencias();
+    cargarClases();
+    cargarEstudiantesParaSelect();
+    cargarClasesParaSelect();
     </script>
 </body>
 </html>
