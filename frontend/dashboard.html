@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Asistencia</title>
+</head>
+<body>
+
+<h2>Estudiantes de la clase 1</h2>
+
+<ul id="lista"></ul>
+
+<script>
+async function cargarEstudiantes() {
+    const res = await fetch("http://localhost:3000/clase/1/estudiantes");
+    const data = await res.json();
+
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    data.forEach(est => {
+        const li = document.createElement("li");
+        li.textContent = est.nombre + " ";
+        const btnAsistio = document.createElement("button");
+        btnAsistio.textContent = "✔";
+        btnAsistio.onclick = () => asistio(est.id);
+        const btnFalto = document.createElement("button");
+        btnFalto.textContent = "❌";
+        btnFalto.onclick = () => falto(est.id);
+        li.appendChild(btnAsistio);
+        li.appendChild(btnFalto);
+        lista.appendChild(li);
+    });
+}
+
+async function asistio(id) {
+    enviarAsistencia(id, "asistio");
+}
+
+async function falto(id) {
+    enviarAsistencia(id, "falta");
+}
+
+async function enviarAsistencia(id_estudiante, estado) {
+    const token = localStorage.getItem("token");
+    const id_profesor = localStorage.getItem("id_profesor");
+    const hoy = new Date().toISOString().split('T')[0];
+
+    try {
+        const res = await fetch("http://localhost:3000/asistencia", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({
+                id_estudiante,
+                id_clase: 1,
+                fecha: hoy,
+                estado,
+                id_profesor: parseInt(id_profesor)
+            })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.mensaje || "Asistencia registrada");
+        } else {
+            alert(data.mensaje || "Error al registrar asistencia");
+        }
+    } catch (err) {
+        alert("Error de conexión");
+        console.error(err);
+    }
+}
+
+cargarEstudiantes();
+</script>
+
+</body>
+</html>

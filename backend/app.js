@@ -5,6 +5,7 @@ const path = require("path");
 const jwt = require("jsonwebtoken");
 
 const db = require("./config/db");
+const verificarToken = require("./middlewares/auth");
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || "secreto";
@@ -45,8 +46,15 @@ app.get("/clase/:id/estudiantes", async (req, res) => {
     }
 });
 
-app.post("/asistencia", async (req, res) => {
-    const { id_estudiante, id_clase, fecha, estado, id_profesor } = req.body;
+app.post("/asistencia", verificarToken, async (req, res) => {
+    const { id_estudiante, id_clase, fecha, estado } = req.body;
+    const id_profesor = req.user.id_profesor;
+    
+    // Validar inputs
+    if (!id_estudiante || !id_clase || !fecha || !estado) {
+        return res.status(400).json({ mensaje: "Faltan datos requeridos" });
+    }
+
     const sql = `
         INSERT INTO asistencia (id_estudiante, id_clase, fecha, estado, id_profesor)
         VALUES (?, ?, ?, ?, ?)
@@ -59,13 +67,12 @@ app.post("/asistencia", async (req, res) => {
         console.error(err);
         if (err.code === "ER_DUP_ENTRY") {
             return res.status(400).json({ mensaje: "Asistencia ya registrada" });
-        }
-        res.status(500).json({ mensaje: "Error al guardar" });
+    
+    // Validar inputs
+    if (!email || !password) {
+        return res.status(400).json({ mensaje: "Email y contraseña requeridos" });
     }
-});
 
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
     const sql = "SELECT * FROM usuarios WHERE email = ?";
 
     try {
@@ -81,6 +88,18 @@ app.post("/login", async (req, res) => {
             return res.status(401).json({ mensaje: "Contraseña incorrecta" });
         }
 
+        const token = jwt.sign(
+            { id: user.id, rol: user.rol, id_profesor: user.id_profesor },
+            JWT_SECRET,
+            { expiresIn: "8h" }
+        );
+
+        res.json({ 
+            mensaje: "Login exitoso", 
+            token, 
+            rol: user.rol,
+            id_profesor: user.id_profesor 
+       
         const token = jwt.sign(
             { id: user.id, rol: user.rol, id_profesor: user.id_profesor },
             JWT_SECRET,
