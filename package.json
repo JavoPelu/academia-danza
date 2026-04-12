@@ -1,0 +1,16 @@
+{
+  "name": "academia-danza",
+  "version": "1.0.0",
+  "description": "Proyecto de academia de danza con backend Node.js y frontend estático.",
+  "main": "backend/app.js",
+  "scripts": {
+    "start": "node backend/app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.4",
+    "jsonwebtoken": "^9.0.1",
+    "mysql2": "^3.6.0"
+  }
+}

@@ -49,7 +49,7 @@ app.get("/clase/:id/estudiantes", async (req, res) => {
 app.post("/asistencia", verificarToken, async (req, res) => {
     const { id_estudiante, id_clase, fecha, estado } = req.body;
     const id_profesor = req.user.id_profesor;
-    
+
     // Validar inputs
     if (!id_estudiante || !id_clase || !fecha || !estado) {
         return res.status(400).json({ mensaje: "Faltan datos requeridos" });
@@ -67,8 +67,14 @@ app.post("/asistencia", verificarToken, async (req, res) => {
         console.error(err);
         if (err.code === "ER_DUP_ENTRY") {
             return res.status(400).json({ mensaje: "Asistencia ya registrada" });
-    
-    // Validar inputs
+        }
+        res.status(500).json({ mensaje: "Error en BD" });
+    }
+});
+
+app.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+
     if (!email || !password) {
         return res.status(400).json({ mensaje: "Email y contraseña requeridos" });
     }
@@ -94,19 +100,7 @@ app.post("/asistencia", verificarToken, async (req, res) => {
             { expiresIn: "8h" }
         );
 
-        res.json({ 
-            mensaje: "Login exitoso", 
-            token, 
-            rol: user.rol,
-            id_profesor: user.id_profesor 
-       
-        const token = jwt.sign(
-            { id: user.id, rol: user.rol, id_profesor: user.id_profesor },
-            JWT_SECRET,
-            { expiresIn: "8h" }
-        );
-
-        res.json({ mensaje: "Login exitoso", token, rol: user.rol });
+        res.json({ mensaje: "Login exitoso", token, rol: user.rol, id_profesor: user.id_profesor });
     } catch (err) {
         console.error(err);
         res.status(500).json({ mensaje: "Error servidor" });
