@@ -1,29 +1,308 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: Arial;
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: #1f2937;
+    background: radial-gradient(circle at top left, #e7f0ff 0%, transparent 35%),
+                radial-gradient(circle at bottom right, #fde4ff 0%, transparent 30%),
+                linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.card {
+    width: 100%;
+    max-width: 420px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 24px;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.12);
+    padding: 32px;
+    border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.login-card {
+    text-align: left;
+}
+
+.brand {
     text-align: center;
-    margin-top: 50px;
+    margin-bottom: 28px;
 }
 
-input {
+.brand-logo {
+    display: inline-flex;
+    width: 74px;
+    height: 74px;
+    border-radius: 22px;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    font-size: 32px;
+    margin-bottom: 14px;
+}
+
+.brand h1 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: -0.03em;
+}
+
+.brand p {
+    margin: 10px auto 0;
+    color: #64748b;
+}
+
+.login-form label {
     display: block;
-    margin: 10px auto;
-    padding: 10px;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    color: #475569;
 }
 
-button {
-    padding: 10px;
-    margin: 5px;
+.login-form input {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    background: #f8fafc;
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-form input:focus {
+    outline: none;
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
+}
+
+button.primary-button,
+button.secondary-button,
+.icon-button {
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button.primary-button {
+    width: 100%;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    margin-top: 4px;
+}
+
+button.primary-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 32px rgba(99, 102, 241, 0.24);
+}
+
+button.secondary-button {
+    background: rgba(15, 23, 42, 0.08);
+    color: #111827;
+    padding: 12px 18px;
+}
+
+button.secondary-button:hover,
+.icon-button:hover {
+    transform: translateY(-1px);
 }
 
 .mensaje {
-    margin-top: 15px;
-    padding: 10px;
-    border-radius: 4px;
-    font-weight: bold;
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.mensaje.toast {
+    opacity: 0;
+}
+
+.mensaje.success {
+    color: #065f46;
+    background-color: #ecfdf5;
+    border: 1px solid #86efac;
 }
 
 .mensaje.error {
-    color: #d32f2f;
-    background-color: #ffebee;
-    border: 1px solid #d32f2f;
+    color: #b91c1c;
+    background-color: #fee2e2;
+    border: 1px solid #fecaca;
+}
+
+.dashboard-page {
+    flex-direction: column;
+    padding: 32px;
+}
+
+.topbar {
+    width: min(100%, 960px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.topbar h1 {
+    margin: 0;
+    font-size: 1.9rem;
+}
+
+.subtitle {
+    margin: 6px 0 0;
+    color: #475569;
+}
+
+.dashboard-card {
+    max-width: 960px;
+    padding: 24px;
+}
+
+.student-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.student-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.student-item span {
+    font-size: 1rem;
+    color: #111827;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(56px, 72px));
+    gap: 10px;
+}
+
+.icon-button {
+    padding: 12px 0;
+    width: 100%;
+    font-size: 1.1rem;
+    color: white;
+}
+
+.icon-button.attend {
+    background: #22c55e;
+}
+
+.icon-button.absent {
+    background: #ef4444;
+}
+
+.icon-button:focus {
+    outline: none;
+}
+
+.attendance-panel {
+    margin-top: 32px;
+}
+
+.attendance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.attendance-container {
+    min-height: 120px;
+}
+
+.attendance-table-wrapper {
+    overflow-x: auto;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 100%;
+}
+
+.attendance-table th,
+.attendance-table td {
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.attendance-table th {
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.8rem;
+}
+
+.attendance-status {
+    font-weight: 700;
+}
+
+.attendance-status.asistio {
+    color: #047857;
+}
+
+.attendance-status.falta {
+    color: #b91c1c;
+}
+
+.empty-state {
+    margin: 0;
+    color: #64748b;
+    padding: 16px;
+    border-radius: 16px;
+    background: #f8fafc;
+}
+
+@media (max-width: 720px) {
+    .page,
+    .topbar,
+    .dashboard-card,
+    .login-card {
+        width: 100%;
+    }
+
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .student-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .action-buttons {
+        grid-template-columns: 1fr 1fr;
+    }
 }

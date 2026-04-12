@@ -4,79 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Asistencia</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="page dashboard-page">
+        <header class="topbar">
+            <div>
+                <h1>Registro de asistencia</h1>
+                <p class="subtitle">Clase 1 - Control de estudiantes</p>
+            </div>
+            <button id="logoutBtn" class="secondary-button">Cerrar sesión</button>
+        </header>
 
-<h2>Estudiantes de la clase 1</h2>
+        <main class="card dashboard-card">
+            <div id="mensaje" class="mensaje toast"></div>
+            <ul id="lista" class="student-list"></ul>
 
-<ul id="lista"></ul>
+            <section class="attendance-panel">
+                <div class="attendance-header">
+                    <h2>Asistencias registradas</h2>
+                    <button id="refreshAttendance" class="secondary-button">Actualizar</button>
+                </div>
+                <div id="attendanceContainer" class="attendance-container">Cargando asistencias...</div>
+            </section>
+        </main>
+    </div>
 
-<script>
-async function cargarEstudiantes() {
-    const res = await fetch("http://localhost:3000/clase/1/estudiantes");
-    const data = await res.json();
+    <script>
+    const mensajeDiv = document.getElementById("mensaje");
 
-    const lista = document.getElementById("lista");
-    lista.innerHTML = "";
-
-    data.forEach(est => {
-        const li = document.createElement("li");
-        li.textContent = est.nombre + " ";
-        const btnAsistio = document.createElement("button");
-        btnAsistio.textContent = "✔";
-        btnAsistio.onclick = () => asistio(est.id);
-        const btnFalto = document.createElement("button");
-        btnFalto.textContent = "❌";
-        btnFalto.onclick = () => falto(est.id);
-        li.appendChild(btnAsistio);
-        li.appendChild(btnFalto);
-        lista.appendChild(li);
-    });
-}
-
-async function asistio(id) {
-    enviarAsistencia(id, "asistio");
-}
-
-async function falto(id) {
-    enviarAsistencia(id, "falta");
-}
-
-async function enviarAsistencia(id_estudiante, estado) {
-    const token = localStorage.getItem("token");
-    const id_profesor = localStorage.getItem("id_profesor");
-    const hoy = new Date().toISOString().split('T')[0];
-
-    try {
-        const res = await fetch("http://localhost:3000/asistencia", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
-            },
-            body: JSON.stringify({
-                id_estudiante,
-                id_clase: 1,
-                fecha: hoy,
-                estado,
-                id_profesor: parseInt(id_profesor)
-            })
-        });
-
+    async function cargarEstudiantes() {
+        const res = await fetch("http://localhost:3000/clase/1/estudiantes");
         const data = await res.json();
-        if (res.ok) {
-            alert(data.mensaje || "Asistencia registrada");
-        } else {
-            alert(data.mensaje || "Error al registrar asistencia");
-        }
-    } catch (err) {
-        alert("Error de conexión");
-        console.error(err);
+
+        const lista = document.getElementById("lista");
+        lista.innerHTML = "";
+
+        data.forEach(est => {
+            const li = document.createElement("li");
+            li.className = "student-item";
+
+            const nombre = document.createElement("span");
+            nombre.textContent = est.nombre;
+
+            const actions = document.createElement("div");
+            actions.className = "action-buttons";
+
+            const btnAsistio = document.createElement("button");
+            btnAsistio.textContent = "✔";
+            btnAsistio.className = "icon-button attend";
+            btnAsistio.onclick = () => asistio(est.id);
+
+            const btnFalto = document.createElement("button");
+            btnFalto.textContent = "✖";
+            btnFalto.className = "icon-button absent";
+            btnFalto.onclick = () => falto(est.id);
+
+            actions.appendChild(btnAsistio);
+            actions.appendChild(btnFalto);
+            li.appendChild(nombre);
+            li.appendChild(actions);
+            lista.appendChild(li);
+        });
     }
-}
 
-cargarEstudiantes();
-</script>
+    async function asistio(id) {
+        enviarAsistencia(id, "asistio");
+    }
 
+    async function falto(id) {
+        enviarAsistencia(id, "falta");
+    }
+
+    function mostrarMensaje(texto, tipo = "success") {
+        mensajeDiv.textContent = texto;
+        mensajeDiv.className = `mensaje toast ${tipo === "error" ? "error" : "success"}`;
+        mensajeDiv.style.opacity = "1";
+        setTimeout(() => {
+            mensajeDiv.style.opacity = "0";
+        }, 3500);
+    }
+
+    async function cargarAsistencias() {
+        const container = document.getElementById("attendanceContainer");
+        try {
+            const res = await fetch("http://localhost:3000/asistencia");
+            const data = await res.json();
+
+            if (!res.ok) {
+                container.innerHTML = `<p class="empty-state">No se pudieron cargar las asistencias.</p>`;
+                return;
+            }
+
+            if (!data.length) {
+                container.innerHTML = `<p class="empty-state">No hay asistencias registradas aún.</p>`;
+                return;
+            }
+
+            const rows = data.map(row => `
+                <tr>
+                    <td>${row.nombre}</td>
+                    <td>${row.clase}</td>
+                    <td>${row.fecha}</td>
+                    <td class="attendance-status ${row.estado === 'asistio' ? 'asistio' : 'falta'}">${row.estado}</td>
+                </tr>
+            `).join("");
+
+            container.innerHTML = `
+                <div class="attendance-table-wrapper">
+                    <table class="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Clase</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+        } catch (err) {
+            container.innerHTML = `<p class="empty-state">Error de conexión.</p>`;
+            console.error(err);
+        }
+    }
+
+    async function enviarAsistencia(id_estudiante, estado) {
+        const token = localStorage.getItem("token");
+        const hoy = new Date().toISOString().split('T')[0];
+
+        try {
+            const res = await fetch("http://localhost:3000/asistencia", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token
+                },
+                body: JSON.stringify({
+                    id_estudiante,
+                    id_clase: 1,
+                    fecha: hoy,
+                    estado
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                mostrarMensaje(data.mensaje || "Asistencia registrada");
+                cargarEstudiantes();
+                cargarAsistencias();
+            } else {
+                mostrarMensaje(data.mensaje || "Error al registrar asistencia", "error");
+            }
+        } catch (err) {
+            mostrarMensaje("Error de conexión", "error");
+            console.error(err);
+        }
+    }
+
+    document.getElementById("logoutBtn").onclick = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("id_profesor");
+        window.location.href = "index.html";
+    };
+
+    document.getElementById("refreshAttendance").onclick = () => cargarAsistencias();
+
+    cargarEstudiantes();
+    cargarAsistencias();
+    </script>
 </body>
 </html>

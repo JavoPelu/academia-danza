@@ -50,7 +50,6 @@ app.post("/asistencia", verificarToken, async (req, res) => {
     const { id_estudiante, id_clase, fecha, estado } = req.body;
     const id_profesor = req.user.id_profesor;
 
-    // Validar inputs
     if (!id_estudiante || !id_clase || !fecha || !estado) {
         return res.status(400).json({ mensaje: "Faltan datos requeridos" });
     }
@@ -58,6 +57,9 @@ app.post("/asistencia", verificarToken, async (req, res) => {
     const sql = `
         INSERT INTO asistencia (id_estudiante, id_clase, fecha, estado, id_profesor)
         VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            estado = VALUES(estado),
+            id_profesor = VALUES(id_profesor)
     `;
 
     try {
@@ -65,9 +67,6 @@ app.post("/asistencia", verificarToken, async (req, res) => {
         res.json({ mensaje: "Asistencia registrada correctamente" });
     } catch (err) {
         console.error(err);
-        if (err.code === "ER_DUP_ENTRY") {
-            return res.status(400).json({ mensaje: "Asistencia ya registrada" });
-        }
         res.status(500).json({ mensaje: "Error en BD" });
     }
 });
