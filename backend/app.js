@@ -375,6 +375,23 @@ app.post("/inscripciones", verificarToken, async (req, res) => {
             return res.status(400).json({ mensaje: "El estudiante ya tiene otra clase en ese mismo horario" });
         }
 
+        // Verificar capacidad de la clase
+        const [capacidad] = await db.query(
+            `SELECT capacidad_maxima,
+                    (SELECT COUNT(*) FROM inscripciones WHERE id_clase = ?) AS inscritos
+             FROM clases
+             WHERE id = ?`,
+            [id_clase, id_clase]
+        );
+
+        if (capacidad.length === 0) {
+            return res.status(404).json({ mensaje: "Clase no existe" });
+        }
+
+        if (capacidad[0].inscritos >= capacidad[0].capacidad_maxima) {
+            return res.status(400).json({ mensaje: "La clase ya está llena" });
+        }
+
         const sql = "INSERT INTO inscripciones (id_estudiante, id_clase, fecha_inscripcion) VALUES (?, ?, CURDATE())";
         await db.query(sql, [id_estudiante, id_clase]);
         res.json({ mensaje: "Estudiante asignado a clase correctamente" });
