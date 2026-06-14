@@ -31,31 +31,27 @@ const requireSuperAdmin = (req, res, next) => {
 async function inicializarTablas() {
     const sqlAsistenciaProfesores = `
         CREATE TABLE IF NOT EXISTS asistencia_profesores (
-            id INT AUTO_INCREMENT PRIMARY KEY,
+            id SERIAL PRIMARY KEY,
             id_profesor INT NOT NULL,
             fecha DATE NOT NULL,
-            estado ENUM('asistio', 'falta') NOT NULL,
+            estado VARCHAR(10) NOT NULL CHECK (estado IN ('asistio', 'falta')),
             reportado_por_admin INT NULL,
-            UNIQUE KEY unique_profesor_fecha (id_profesor, fecha),
-            INDEX idx_profesor_fecha (id_profesor, fecha)
-        )
+            UNIQUE (id_profesor, fecha),        )
     `;
 
     const sqlMensualidades = `
         CREATE TABLE IF NOT EXISTS mensualidades (
-            id INT AUTO_INCREMENT PRIMARY KEY,
+            id SERIAL PRIMARY KEY,
             id_estudiante INT NOT NULL,
             periodo CHAR(7) NOT NULL,
             fecha_inicio DATE NOT NULL,
             fecha_fin DATE NOT NULL,
             clases_incluidas INT NOT NULL DEFAULT 4,
             valor DECIMAL(10,2) NOT NULL DEFAULT 0,
-            estado ENUM('debe', 'al_dia') NOT NULL DEFAULT 'debe',
+            estado VARCHAR(10) NOT NULL DEFAULT 'debe' CHECK (estado IN ('debe', 'al_dia')),
             fecha_pago DATE NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE KEY unique_estudiante_periodo (id_estudiante, periodo),
-            INDEX idx_periodo_estado (periodo, estado)
-        )
+            UNIQUE (id_estudiante, periodo),        )
     `;
 
     const sqlTarifasClase = `
@@ -67,7 +63,7 @@ async function inicializarTablas() {
 
     const sqlPagosEstudianteClase = `
         CREATE TABLE IF NOT EXISTS pagos_estudiante_clase (
-            id INT AUTO_INCREMENT PRIMARY KEY,
+            id SERIAL PRIMARY KEY,
             id_estudiante INT NOT NULL,
             id_clase INT NOT NULL,
             fecha_pago DATE NOT NULL,
@@ -75,9 +71,7 @@ async function inicializarTablas() {
             periodo_referencia CHAR(7) NULL,
             observacion VARCHAR(255) NULL,
             registrado_por INT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            INDEX idx_estudiante_clase_fecha (id_estudiante, id_clase, fecha_pago)
-        )
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,        )
     `;
 
     const sqlDescuentosEstudiante = `
@@ -151,12 +145,12 @@ app.put("/estudiantes/:id/fecha-ingreso", verificarToken, requireAdmin, async (r
     }
 
     try {
-        const [result] = await db.query(
+        const [, result] = await db.query(
             "UPDATE estudiantes SET fecha_registro = ? WHERE id = ?",
             [fecha_registro, id]
         );
 
-        if (!result.affectedRows) {
+        if (!result.rowCount) {
             return res.status(404).json({ mensaje: "Estudiante no encontrado" });
         }
 
@@ -230,9 +224,7 @@ app.put("/estudiantes/:id/descuento", verificarToken, requireAdmin, async (req, 
 
     try {
         await db.query(
-            `INSERT INTO descuentos_estudiante (id_estudiante, porcentaje_dos_o_mas_clases)
-             VALUES (?, ?)
-             ON DUPLICATE KEY UPDATE porcentaje_dos_o_mas_clases = VALUES(porcentaje_dos_o_mas_clases)`,
+            `INSERT INTO descuentos_estudiante (id_estudiante, porcentaje_dos_o_mas_clases) VALUES (?, ?) ON CONFLICT (id_estudiante) DO UPDATE SET porcentaje_dos_o_mas_clases = EXCLUDED.porcentaje_dos_o_mas_clases`,
             [id, porcentaje]
         );
         res.json({ mensaje: "Descuento actualizado correctamente" });
@@ -250,8 +242,8 @@ app.get("/clases", async (req, res) => {
                c.nivel,
                c.capacidad_maxima,
                COALESCE(COUNT(DISTINCT i.id_estudiante), 0) AS estudiantes_inscritos,
-               COALESCE(GROUP_CONCAT(DISTINCT p.nombre SEPARATOR ', '), 'Sin asignar') AS profesor_nombre,
-               GROUP_CONCAT(DISTINCT CONCAT(h.dia_semana, ' ', DATE_FORMAT(h.hora, '%H:%i')) SEPARATOR ', ') AS horarios
+               COALESCE(STRING_AGG(DISTINCT p.nombre, ', '), 'Sin asignar') AS profesor_nombre,
+               STRING_AGG(DISTINCT h.dia_semana || ' ' || TO_CHAR(h.hora, 'HH24:MI'), ', ') AS horarios
         FROM clases c
         LEFT JOIN horarios h ON h.id_clase = c.id
         LEFT JOIN profesores p ON p.id = h.id_profesor
@@ -294,9 +286,7 @@ app.put("/clases/:id/tarifa", verificarToken, requireAdmin, async (req, res) => 
 
     try {
         await db.query(
-            `INSERT INTO tarifas_clase (id_clase, valor_mensual)
-             VALUES (?, ?)
-             ON DUPLICATE KEY UPDATE valor_mensual = VALUES(valor_mensual)`,
+            `INSERT INTO tarifas_clase (id_clase, valor_mensual) VALUES (?, ?) ON CONFLICT (id_clase) DO UPDATE SET valor_mensual = EXCLUDED.valor_mensual`,
             [id, valor]
         );
         res.json({ mensaje: "Tarifa de clase actualizada correctamente" });
@@ -317,8 +307,8 @@ app.get("/mis-clases", verificarToken, async (req, res) => {
                c.nivel,
                c.capacidad_maxima,
                COALESCE(COUNT(DISTINCT i.id_estudiante), 0) AS estudiantes_inscritos,
-               COALESCE(GROUP_CONCAT(DISTINCT p.nombre SEPARATOR ', '), 'Sin asignar') AS profesor_nombre,
-               GROUP_CONCAT(DISTINCT CONCAT(h.dia_semana, ' ', DATE_FORMAT(h.hora, '%H:%i')) SEPARATOR ', ') AS horarios
+               COALESCE(STRING_AGG(DISTINCT p.nombre, ', '), 'Sin asignar') AS profesor_nombre,
+               STRING_AGG(DISTINCT h.dia_semana || ' ' || TO_CHAR(h.hora, 'HH24:MI'), ', ') AS horarios
         FROM clases c
         LEFT JOIN horarios h ON h.id_clase = c.id
         LEFT JOIN profesores p ON p.id = h.id_profesor
@@ -365,8 +355,8 @@ app.get("/clases/:id", async (req, res) => {
                c.descripcion,
                c.nivel,
                c.capacidad_maxima,
-               COALESCE(GROUP_CONCAT(DISTINCT CONCAT(h.dia_semana, ' ', DATE_FORMAT(h.hora, '%H:%i')) SEPARATOR ', '), '') AS horarios,
-               COALESCE(GROUP_CONCAT(DISTINCT p.nombre SEPARATOR ', '), '') AS profesor_nombre
+               COALESCE(STRING_AGG(DISTINCT h.dia_semana || ' ' || TO_CHAR(h.hora, 'HH24:MI'), ', '), '') AS horarios,
+               COALESCE(STRING_AGG(DISTINCT p.nombre, ', '), '') AS profesor_nombre
         FROM clases c
         LEFT JOIN horarios h ON h.id_clase = c.id
         LEFT JOIN profesores p ON p.id = h.id_profesor
@@ -427,15 +417,14 @@ app.post("/clases", verificarToken, async (req, res) => {
     }
 
     const sql = `
-        INSERT INTO clases (nombre, descripcion, nivel, capacidad_maxima)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO clases (nombre, descripcion, nivel, capacidad_maxima) VALUES (?, ?, ?, ?) RETURNING id
     `;
 
     try {
-        const [result] = await db.query(sql, [nombre, descripcion || null, nivel, capacidad_maxima || 20]);
+        const [inserted] = await db.query(sql, [nombre, descripcion || null, nivel, capacidad_maxima || 20]);
         res.json({ 
             mensaje: "Clase creada correctamente", 
-            id: result.insertId 
+            id: inserted[0]?.id 
         });
     } catch (err) {
         console.error(err);
@@ -457,15 +446,14 @@ app.post("/horarios", verificarToken, async (req, res) => {
     }
 
     const sql = `
-        INSERT INTO horarios (id_clase, id_profesor, dia_semana, hora)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO horarios (id_clase, id_profesor, dia_semana, hora) VALUES (?, ?, ?, ?) RETURNING id
     `;
 
     try {
-        const [result] = await db.query(sql, [id_clase, id_profesor, dia_semana, hora]);
+        const [inserted] = await db.query(sql, [id_clase, id_profesor, dia_semana, hora]);
         res.json({ 
             mensaje: "Horario asignado correctamente", 
-            id: result.insertId 
+            id: inserted[0]?.id 
         });
     } catch (err) {
         console.error(err);
@@ -483,7 +471,7 @@ app.get("/horarios/:id_clase", async (req, res) => {
         FROM horarios h
         JOIN profesores p ON p.id = h.id_profesor
         WHERE h.id_clase = ?
-        ORDER BY FIELD(h.dia_semana, 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'), h.hora
+        ORDER BY array_position(array['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'], h.dia_semana), h.hora
     `;
 
     try {
@@ -579,19 +567,20 @@ app.post("/profesores", verificarToken, requireAdmin, async (req, res) => {
             return res.status(400).json({ mensaje: "Usuario o contraseña ya están en uso" });
         }
 
-        const [resultProfesor] = await db.query(
-            "INSERT INTO profesores (nombre) VALUES (?)",
+        const [resultProfesorRows] = await db.query(
+            "INSERT INTO profesores (nombre) VALUES (?) RETURNING id",
             [nombre.trim()]
         );
+        const profesorId = resultProfesorRows[0]?.id;
 
         await db.query(
             "INSERT INTO usuarios (email, password, rol, id_profesor) VALUES (?, ?, 'profesor', ?)",
-            [String(usuario_numerico), String(password_numerico), resultProfesor.insertId]
+            [String(usuario_numerico), String(password_numerico), profesorId]
         );
 
         res.json({
             mensaje: "Profesor creado correctamente",
-            id_profesor: resultProfesor.insertId
+            id_profesor: profesorId
         });
     } catch (err) {
         console.error(err);
@@ -622,12 +611,12 @@ app.put("/profesores/:id", verificarToken, requireAdmin, async (req, res) => {
         }
 
         await db.query("UPDATE profesores SET nombre = ? WHERE id = ?", [nombre.trim(), id]);
-        const [usuarioActualizado] = await db.query(
+        const [, usuarioActualizado] = await db.query(
             "UPDATE usuarios SET email = ?, password = ? WHERE id_profesor = ? AND rol = 'profesor'",
             [String(usuario_numerico), String(password_numerico), id]
         );
 
-        if (usuarioActualizado.affectedRows === 0) {
+        if (usuarioActualizado.rowCount === 0) {
             await db.query(
                 "INSERT INTO usuarios (email, password, rol, id_profesor) VALUES (?, ?, 'profesor', ?)",
                 [String(usuario_numerico), String(password_numerico), id]
@@ -669,11 +658,7 @@ app.post("/profesores/:id/asistencia", verificarToken, requireAdmin, async (req,
     }
 
     const sql = `
-        INSERT INTO asistencia_profesores (id_profesor, fecha, estado, reportado_por_admin)
-        VALUES (?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-            estado = VALUES(estado),
-            reportado_por_admin = VALUES(reportado_por_admin)
+        INSERT INTO asistencia_profesores (id_profesor, fecha, estado, reportado_por_admin) VALUES (?, ?, ?, ?) ON CONFLICT (id_profesor, fecha) DO UPDATE SET estado = EXCLUDED.estado, reportado_por_admin = EXCLUDED.reportado_por_admin
     `;
 
     try {
@@ -772,13 +757,14 @@ app.post("/mensualidades/generar", verificarToken, requireAdmin, async (req, res
 
         let creadas = 0;
         for (const est of estudiantes) {
-            const [insert] = await db.query(
-                `INSERT IGNORE INTO mensualidades
+            const [, insert] = await db.query(
+                `INSERT INTO mensualidades
                  (id_estudiante, periodo, fecha_inicio, fecha_fin, clases_incluidas, valor, estado)
-                 VALUES (?, ?, ?, ?, 4, ?, 'debe')`,
+                 VALUES (?, ?, ?, ?, 4, ?, 'debe')
+                 ON CONFLICT (id_estudiante, periodo) DO NOTHING`,
                 [est.id, periodo, fecha_inicio, fecha_fin, valor]
             );
-            creadas += insert.affectedRows;
+            creadas += insert.rowCount;
         }
 
         res.json({ mensaje: "Mensualidades generadas", periodo, creadas });
@@ -793,12 +779,12 @@ app.post("/mensualidades/:id/pagar", verificarToken, requireAdmin, async (req, r
     const fecha_pago = req.body.fecha_pago || new Date().toISOString().slice(0, 10);
 
     try {
-        const [result] = await db.query(
+        const [, result] = await db.query(
             "UPDATE mensualidades SET estado = 'al_dia', fecha_pago = ? WHERE id = ?",
             [fecha_pago, id]
         );
 
-        if (!result.affectedRows) {
+        if (!result.rowCount) {
             return res.status(404).json({ mensaje: "Mensualidad no encontrada" });
         }
 
@@ -840,8 +826,8 @@ app.get("/facturacion/resumen", verificarToken, requireAdmin, async (req, res) =
                    COALESCE(t.valor_mensual, 0) AS valor_mensual,
                    COALESCE(d.porcentaje_dos_o_mas_clases, 0) AS porcentaje_descuento,
                    COALESCE(p.total_pagado, 0) AS total_pagado,
-                   GREATEST(TIMESTAMPDIFF(MONTH, DATE(e.fecha_registro), CURDATE()) + 1, 1) AS meses_desde_ingreso,
-                   COALESCE(GREATEST(TIMESTAMPDIFF(MONTH, DATE(e.fecha_registro), CURDATE()) + 1, 1) * COALESCE(t.valor_mensual, 0), 0) AS valor_esperado
+                   GREATEST((DATE_PART('year', AGE(CURRENT_DATE, DATE(e.fecha_registro))) * 12 + DATE_PART('month', AGE(CURRENT_DATE, DATE(e.fecha_registro)))) + 1, 1) AS meses_desde_ingreso,
+                   COALESCE((GREATEST((DATE_PART('year', AGE(CURRENT_DATE, DATE(e.fecha_registro))) * 12 + DATE_PART('month', AGE(CURRENT_DATE, DATE(e.fecha_registro)))) + 1, 1) * COALESCE(t.valor_mensual, 0)), 0) AS valor_esperado
             FROM (
                 SELECT DISTINCT i.id_estudiante, i.id_clase FROM inscripciones i
                 UNION
@@ -1033,7 +1019,7 @@ app.post("/inscripciones/cambiar", verificarToken, async (req, res) => {
         }
 
         await db.query("DELETE FROM inscripciones WHERE id_estudiante = ? AND id_clase = ?", [id_estudiante, id_clase_anterior]);
-        await db.query("INSERT INTO inscripciones (id_estudiante, id_clase, fecha_inscripcion) VALUES (?, ?, CURDATE())", [id_estudiante, id_clase_nueva]);
+        await db.query("INSERT INTO inscripciones (id_estudiante, id_clase, fecha_inscripcion) VALUES (?, ?, CURRENT_DATE)", [id_estudiante, id_clase_nueva]);
         res.json({ mensaje: "Estudiante cambiado de clase correctamente" });
     } catch (err) {
         console.error(err);
@@ -1093,7 +1079,7 @@ app.post("/inscripciones", verificarToken, async (req, res) => {
             return res.status(400).json({ mensaje: "La clase ya está llena" });
         }
 
-        const sql = "INSERT INTO inscripciones (id_estudiante, id_clase, fecha_inscripcion) VALUES (?, ?, CURDATE())";
+        const sql = "INSERT INTO inscripciones (id_estudiante, id_clase, fecha_inscripcion) VALUES (?, ?, CURRENT_DATE)";
         await db.query(sql, [id_estudiante, id_clase]);
         res.json({ mensaje: "Estudiante asignado a clase correctamente" });
     } catch (err) {
@@ -1115,11 +1101,7 @@ app.post("/asistencia", verificarToken, async (req, res) => {
     }
 
     const sql = `
-        INSERT INTO asistencia (id_estudiante, id_clase, fecha, estado, id_profesor)
-        VALUES (?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-            estado = VALUES(estado),
-            id_profesor = VALUES(id_profesor)
+        INSERT INTO asistencia (id_estudiante, id_clase, fecha, estado, id_profesor) VALUES (?, ?, ?, ?, ?) ON CONFLICT (id_estudiante, id_clase, fecha) DO UPDATE SET estado = EXCLUDED.estado, id_profesor = EXCLUDED.id_profesor
     `;
 
     try {
