@@ -1275,6 +1275,10 @@ app.get("/clases/:id_clase/asistencias", verificarToken, async (req, res) => {
     }
 });
 
-app.listen(process.env.PORT || 3002, () => {
-    console.log("Servidor en puerto", process.env.PORT || 3002);
-});
+if (!process.env.VERCEL) {
+    app.listen(process.env.PORT || 3002, () => {
+        console.log("Servidor en puerto", process.env.PORT || 3002);
+    });
+}
+
+module.exports = app;
