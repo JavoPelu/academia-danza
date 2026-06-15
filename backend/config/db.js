@@ -1,8 +1,17 @@
 const { Pool } = require('pg');
 
+const connectionString =
+  process.env.DATABASE_URL ||
+  process.env.DATABASE_URL_UNPOOLED ||
+  process.env.NEON_DATABASE_URL ||
+  process.env.NEON_DATABASE_URL_UNPOOLED;
+
+if (!connectionString) {
+  throw new Error('DATABASE_URL, DATABASE_URL_UNPOOLED, NEON_DATABASE_URL or NEON_DATABASE_URL_UNPOOLED must be set');
+}
+
 const createPool = () => new Pool({
-  connectionString: process.env.DATABASE_URL,
-  // Allow disabling SSL via env var for local testing (set to 'false')
+  connectionString,
   ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
   // Serverless-friendly defaults; override with env vars if needed
   max: process.env.PG_MAX ? Number(process.env.PG_MAX) : 6,

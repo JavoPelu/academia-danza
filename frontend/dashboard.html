@@ -315,7 +315,7 @@
 
     <script src="api-config.js"></script>
     <script>
-    const API_URL = localStorage.getItem("API_URL") || window.API_URL || "http://localhost:3002";
+    const API_URL = localStorage.getItem("API_URL") || window.API_URL || (window.location.hostname === "localhost" ? "http://localhost:3002" : window.location.origin);
     const token = localStorage.getItem("token");
     const rol = localStorage.getItem("rol") || "";
     const esAdmin = rol === "admin" || rol === "auxiliar_administrativo" || rol === "auxiliar administrativo";
