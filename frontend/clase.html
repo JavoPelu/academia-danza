@@ -22,7 +22,9 @@
         </main>
     </div>
 
+    <script src="api-config.js"></script>
     <script>
+    const API_URL = localStorage.getItem("API_URL") || window.API_URL || (window.location.hostname === "localhost" ? "http://localhost:3002" : window.location.origin);
     const urlParams = new URLSearchParams(window.location.search);
     const classId = urlParams.get('id');
     const className = decodeURIComponent(urlParams.get('nombre') || '');
@@ -46,7 +48,7 @@
         }
 
         try {
-            const res = await fetch(`http://localhost:3002/clase/${classId}/estudiantes`);
+            const res = await fetch(`${API_URL}/clase/${classId}/estudiantes`);
             const data = await res.json();
 
             const list = document.getElementById("studentsList");
@@ -83,7 +85,7 @@
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch(`http://localhost:3002/inscripciones/${id_estudiante}/${classId}`, {
+            const res = await fetch(`${API_URL}/inscripciones/${id_estudiante}/${classId}`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": "Bearer " + token
@@ -106,7 +108,7 @@
     async function cambiarEstudiante(id_estudiante, nombre) {
         // Cargar clases disponibles
         try {
-            const res = await fetch("http://localhost:3002/clases");
+            const res = await fetch(`${API_URL}/clases`);
             const clases = await res.json();
             
             const nuevaClase = prompt(`${nombre} se cambiará a:\n\nIds de clases disponibles (ingresa el ID):\n${clases.filter(c => c.id != classId).map(c => `${c.id}: ${c.nombre}`).join('\n')}`, '');
@@ -114,7 +116,7 @@
             if (!nuevaClase) return;
 
             const token = localStorage.getItem("token");
-            const cambiarRes = await fetch("http://localhost:3002/inscripciones/cambiar", {
+            const cambiarRes = await fetch(`${API_URL}/inscripciones/cambiar`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

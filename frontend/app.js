@@ -21,7 +21,8 @@ async function login(event) {
         mensajeDiv.textContent = "Cargando...";
         mensajeDiv.className = "mensaje";
 
-        const res = await fetch("http://localhost:3002/login", {
+        const apiUrl = localStorage.getItem("API_URL") || window.API_URL || (window.location.hostname === "localhost" ? "http://localhost:3002" : window.location.origin);
+        const res = await fetch(`${apiUrl}/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
