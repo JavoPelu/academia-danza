@@ -16,7 +16,7 @@ const createPool = () => new Pool({
   // Serverless-friendly defaults; override with env vars if needed
   max: process.env.PG_MAX ? Number(process.env.PG_MAX) : 6,
   idleTimeoutMillis: process.env.PG_IDLE_MS ? Number(process.env.PG_IDLE_MS) : 30000,
-  connectionTimeoutMillis: process.env.PG_CONN_TIMEOUT_MS ? Number(process.env.PG_CONN_TIMEOUT_MS) : 2000
+  connectionTimeoutMillis: process.env.PG_CONN_TIMEOUT_MS ? Number(process.env.PG_CONN_TIMEOUT_MS) : 15000
 });
 
 // Reuse pool across hot-reloads / serverless invocations (Vercel lambdas)
@@ -47,9 +47,9 @@ const query = async (text, params) => {
 (async () => {
   try {
     await query('SELECT NOW()');
-    console.log('✅ Conectado a PostgreSQL (Neon)');
+    console.log('âœ… Conectado a PostgreSQL (Neon)');
   } catch (err) {
-    console.error('❌ Error conexión (no se aborta el proceso):', err.message || err);
+    console.error('âŒ Error conexiÃ³n (no se aborta el proceso):', err.message || err);
     // Do not exit here; allow the runtime to surface errors in logs (especially on Vercel)
   }
 })();
